@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>W03P04</title>
+	<script type="text/javascript" src="MV.js"></script>
+	<script type="text/javascript" src="w03p04.js"></script>
+	<script id="wgsl" type="x-shader" src="w03p04.wgsl"></script>
+	<style>
+		body {
+			font-size: 1.5em;
+		}
+
+		.flex-row {
+			display: flex;
+			align-items: center;
+			margin-bottom: 0.5em;
+			gap: 16px;
+		}
+
+		.flex-col {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.controls {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="flex-row">
+		<canvas id="my-canvas" width="512" height="512">
+			Please use a browser that supports HTML5 canvas.
+		</canvas>
+		<div class="controls">
+			<div class="flex-col">
+				<label for="gamma-slider" id="gamma-slider-label">Gamma: 1.0</label>
+				<input type="range" id="gamma-slider" min="0.1" max="5.0" step="0.1" value="1.0">
+			</div>
+			<div class="flex-col">
+				<label for="zoom-slider" id="zoom-slider-label">Zoom: 1.0</label>
+				<input type="range" id="zoom-slider" min="0.5" max="5.0" step="0.1" value="1.0">
+			</div>
+			<div>
+				<label for="plane-shader-select">Plane Shader:</label><br>
+				<select id="plane-shader-select">
+					<option value=0 selected>Base color</option>
+					<option value=1>Lambertian</option>
+				</select>
+			</div>
+			<div>
+				<label for="triangle-shader-select">Triangle Shader:</label><br>
+				<select id="triangle-shader-select">
+					<option value=0>Base color</option>
+					<option value=1 selected>Lambertian</option>
+				</select>
+			</div>
+			<div>
+				<label for="sphere-shader-select">Sphere Shader:</label><br>
+				<select id="sphere-shader-select">
+					<option value=0>Base color</option>
+					<option value=1>Lambertian</option>
+					<option value=2>Phong</option>
+					<option value=3>Mirror</option>
+					<option value=4>Refraction</option>
+					<option value=5 selected>Glossy</option>
+				</select>
+			</div>
+			<div>
+				<label for="texture-enable">Texture Enable:</label><br>
+				<select id="texture-enable">
+					<option value=0 selected>Enabled</option>
+					<option value=1>Disabled</option>
+				</select>
+			</div>
+			<div>
+				<label for="texture-edge-mode">Texture Edge Mode:</label><br>
+				<select id="texture-edge-mode">
+					<option value=0 selected>Repeat mode</option>
+					<option value=1>Clamp mode</option>
+				</select>
+			</div>
+			<div>
+				<label for="texture-interpolation">Texture Interpolation:</label><br>
+				<select id="texture-interpolation">
+					<option value=0>Nearest</option>
+					<option value=1 selected>Bilinear</option>
+				</select>
+			</div>
+			<div class="flex-col">
+				<label for="texture-scaling-slider" id="texture-scaling-slider-label">Texture Scaling: 1.0</label>
+				<input type="range" id="texture-scaling-slider" min="1" max="10" step="0.1" value="1.0">
+			</div>
+			<div class="flex-col">
+				<label for="subpixel-slider" id="subpixel-slider-label">Subpixels: 5</label>
+				<input type="range" id="subpixel-slider" min="1" max="10" step="1" value="5">
+			</div>
+		</div>
+	</div>
+	<p><b>TODO: <i>Inspect the default scene using different settings and describe how texture aliasing is affected by
+				pixel subdivision level and nearest versus linear filtering. The former is most easily explored using
+				the base colour shader. The latter is most easily explored using a magnified texture.</i></b></p>
+</body>
+
+</html>

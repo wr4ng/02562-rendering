@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>W03P01</title>
+	<script type="text/javascript" src="MV.js"></script>
+	<script type="text/javascript" src="w03p01.js"></script>
+	<script id="wgsl" type="x-shader" src="w03p01.wgsl"></script>
+	<style>
+		body {
+			font-size: 1.5em;
+		}
+	</style>
+</head>
+
+<body>
+	<canvas id="my-canvas" width="512" height="512">
+		Please use a browser that supports HTML5 canvas.
+	</canvas>
+	<br>
+	<label for="gamma-slider" id="gamma-slider-label">Gamma: 1.0</label>
+	<input type="range" id="gamma-slider" min="0.1" max="5.0" step="0.1" value="1.0">
+	<br>
+	<label for="zoom-slider" id="zoom-slider-label">Zoom: 1.0</label>
+	<input type="range" id="zoom-slider" min="0.5" max="5.0" step="0.1" value="1.0">
+	<br>
+	<label for="plane-shader-select">Plane Shader:</label>
+	<select id="plane-shader-select">
+		<option value=0>Base color</option>
+		<option value=1 selected>Lambertian</option>
+	</select>
+	<br>
+	<label for="triangle-shader-select">Triangle Shader:</label>
+	<select id="triangle-shader-select">
+		<option value=0>Base color</option>
+		<option value=1 selected>Lambertian</option>
+	</select>
+	<br>
+	<label for="sphere-shader-select">Sphere Shader:</label>
+	<select id="sphere-shader-select">
+		<option value=0>Base color</option>
+		<option value=1>Lambertian</option>
+		<option value=2>Phong</option>
+		<option value=3>Mirror</option>
+		<option value=4>Refraction</option>
+		<option value=5 selected>Glossy</option>
+	</select>
+
+	<label for="texture-edge-mode">Texture Edge Mode:</label>
+	<select id="texture-edge-mode">
+		<option value=0 selected>Repeat mode</option>
+		<option value=1>Clamp mode</option>
+	</select>
+	<label for="texture-interpolation">Texture Interpolation:</label>
+	<select id="texture-interpolation">
+		<option value=0 selected>Nearest</option>
+		<option value=1>Bilinear</option>
+	</select>
+</body>
+
+</html>
