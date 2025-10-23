@@ -86,13 +86,11 @@ async function main() {
 	});
 	device.queue.writeBuffer(matidxBuffer, 0, obj.mat_indices);
 
-	//TODO: Why does this bindgroup not work?
 	const lightidxBuffer = device.createBuffer({
-		size: 8,
+		size: obj.light_indices.byteLength,
 		usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
 	});
 	device.queue.writeBuffer(lightidxBuffer, 0, obj.light_indices);
-
 
 	// Setup pipeline
 	const pipeline = device.createRenderPipeline({

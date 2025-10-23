@@ -181,10 +181,8 @@ fn lambertian(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 	if (intersect_scene(&shadow_ray, & shadow_hit)) {
 		return hit.emission;
 	}
-
 	return (hit.diffuse / 3.14) * light.L_i * dot(hit.normal, light.w_i) + hit.emission;
 }
-
 
 fn lambertian_all(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 	var result = vec3f(0.0);
@@ -193,9 +191,8 @@ fn lambertian_all(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 		var shadow_ray = Ray(hit.position, light.w_i, 0.0001, light.dist);
 		var shadow_hit = default_hitinfo();
 		if (!intersect_scene(&shadow_ray, & shadow_hit)) {
-			continue;
+			result += (hit.diffuse / 3.14) * light.L_i * dot(hit.normal, light.w_i);
 		}
-		result += (hit.diffuse / 3.14) * light.L_i * dot(hit.normal, light.w_i);
 	}
 	return result + hit.emission;
 }
@@ -226,7 +223,7 @@ fn mirror(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 	r.origin = hit.position;
 	r.direction = reflected_dir;
 	r.tmin = 1e-4;
-	r.tmax = 100.0;
+	r.tmax = 1.0e32;
 	return vec3f(0.0, 0.0, 0.0);
 }
 
@@ -264,10 +261,11 @@ fn refraction(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 	return vec3f(0.0, 0.0, 0.0);
 }
 
+// TODO: Somewhere here!
 fn shade(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 	switch hit.shader {
 		case 1 {
-			return lambertian(r, hit);
+			return lambertian_all(r, hit);
 		}
 		case 2 {
 			return phong(r, hit);
@@ -293,21 +291,16 @@ struct Onb {
 	normal: vec3f,
 }
 
+// TODO: Somewhere here!
 fn intersect_scene(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> bool {
-	const triangle_color = vec3f(0.9);
-
 	// Loop over all triangles in the mesh
 	let triangles = arrayLength(&meshFaces);
 	for (var i = 0u; i < triangles; i++) {
-		let face = meshFaces[i];
-		let v0 = vPositions[face.x];
-		let v1 = vPositions[face.y];
-		let v2 = vPositions[face.z];
 		if (intersect_triangle(*r, hit, i)) {
 			let mat = materials[matIndices[i]];
 			hit.diffuse = mat.diffuse;
 			hit.emission = mat.emission;
-			hit.shader = 0;
+			hit.shader = 1;
 			r.tmax = hit.distance;
 		}
 	}
@@ -343,6 +336,7 @@ fn sample_directional_light(pos: vec3f) -> Light {
 	return light;
 }
 
+// TODO: Somewhere here!
 fn sample_triangle_light(pos: vec3f, i: u32) -> Light {
 	var light = Light();
 	let face = meshFaces[i];
@@ -350,9 +344,10 @@ fn sample_triangle_light(pos: vec3f, i: u32) -> Light {
 	let v1 = vPositions[face.y];
 	let v2 = vPositions[face.z];
 
+	// let light_position = (v0 + v1 + v2) / 3.0;
 	let light_position = (v0 + v1 + v2) / 3.0;
-	//TODO: Should this be multiplied by pi? Only if emission is in all directions
-	let intensity = materials[lightIndices[i]].emission * 3.14;
+	// TODO: Should this be multiplied by pi? Only if emission is in all directions
+	let intensity = materials[i].emission * 3.14;
 
 	light.dist = length(light_position - pos);
 	light.w_i = normalize(light_position - pos);
