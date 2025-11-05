@@ -85,7 +85,6 @@ async function main() {
 	});
 	device.queue.writeBuffer(matidxBuffer, 0, obj.mat_indices);
 
-
 	// Setup pipeline
 	const pipeline = device.createRenderPipeline({
 		layout: 'auto',

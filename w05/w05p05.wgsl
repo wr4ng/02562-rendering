@@ -186,8 +186,9 @@ fn lambertian(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 
 fn lambertian_all(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 	var result = vec3f(0.0);
-	for (var i = 0u; i < arrayLength(&lightIndices); i = i + 1u) {
-		let light = sample_triangle_light(hit.position, lightIndices[i]);
+	let numLights = arrayLength(&lightIndices);
+	for (var i = 0u; i < numLights; i = i + 1u) {
+		let light = sample_area_light(hit.position, lightIndices[i]);
 		var shadow_ray = Ray(hit.position, light.w_i, 0.0001, light.dist);
 		var shadow_hit = default_hitinfo();
 		if (!intersect_scene(&shadow_ray, & shadow_hit)) {
@@ -336,18 +337,22 @@ fn sample_directional_light(pos: vec3f) -> Light {
 	return light;
 }
 
-// TODO: Somewhere here!
-fn sample_triangle_light(pos: vec3f, i: u32) -> Light {
+// TODO:
+fn sample_area_light(pos: vec3f, i: u32) -> Light {
 	var light = Light();
 	let face = meshFaces[i];
 	let v0 = vPositions[face.x];
 	let v1 = vPositions[face.y];
 	let v2 = vPositions[face.z];
 
-	// let light_position = (v0 + v1 + v2) / 3.0;
-	let light_position = (v0 + v1 + v2) / 3.0;
+	// calculate area
+	let edge1 = v1 - v0;
+	let edge2 = v2 - v0;
+	let area = length(cross(edge1, edge2)) * 0.5;
+
+	let light_position = (v0 + v1 + v2) / 3;
 	// TODO: Should this be multiplied by pi? Only if emission is in all directions
-	let intensity = materials[i].emission * 3.14;
+	let intensity = materials[matIndices[i]].emission * area;
 
 	light.dist = length(light_position - pos);
 	light.w_i = normalize(light_position - pos);
