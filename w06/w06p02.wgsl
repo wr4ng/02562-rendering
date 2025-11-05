@@ -28,11 +28,12 @@ struct HitInfo {
 	ior1_over_ior2: f32,
 	shininess: f32,
 	shader: u32,
+	triangle_idx: u32,
 	// To be extended...
 }
 
 fn default_hitinfo() -> HitInfo {
-	return HitInfo(false, 0.0, vec3f(0.0), vec3f(0.0), vec3f(0.0), vec3f(0.0), vec3f(0.0), 0.0, 0.0, 0u);
+	return HitInfo(false, 0.0, vec3f(0.0), vec3f(0.0), vec3f(0.0), vec3f(0.0), vec3f(0.0), 0.0, 0.0, 0u, 0u);
 }
 
 struct Material {
@@ -40,26 +41,19 @@ struct Material {
 	diffuse: vec3f,
 }
 
-@group(0) @binding(0)
-var<uniform> uniforms: Uniforms;
-@group(0) @binding(1)
-var<storage> jitter: array<vec2f>;
-@group(0) @binding(2)
-var<storage> vPositions: array<vec3f>;
-@group(0) @binding(3)
-var<storage> meshFaces: array<vec4u>;
-@group(0) @binding(4)
-var<storage> meshNormals: array<vec3f>;
-@group(0) @binding(5)
-var<storage> materials: array<Material>;
+@group(0) @binding(0) var<uniform> uniforms: Uniforms;
+@group(0) @binding(1) var<storage> jitter: array<vec2f>;
+@group(0) @binding(2) var<storage> vPositions: array<vec3f>;
+@group(0) @binding(3) var<storage> meshFaces: array<vec4u>;
+@group(0) @binding(4) var<storage> meshNormals: array<vec3f>;
+@group(0) @binding(5) var<storage> materials: array<Material>;
 
 struct Aabb {
 	min: vec3f,
 	max: vec3f,
 }
 
-@group(0) @binding(6)
-var<uniform> aabb: Aabb;
+@group(0) @binding(6) var<uniform> aabb: Aabb;
 
 fn intersect_min_max(r: ptr<function, Ray>) -> bool {
 	let p1 = (aabb.min - r.origin) / r.direction;
@@ -77,12 +71,9 @@ fn intersect_min_max(r: ptr<function, Ray>) -> bool {
 }
 
 // BSP
-@group(0) @binding(7)
-var<storage> treeIds: array<u32>;
-@group(0) @binding(8)
-var<storage> bspTree: array<vec4u>;
-@group(0) @binding(9)
-var<storage> bspPlanes: array<f32>;
+@group(0) @binding(7) var<storage> treeIds: array<u32>;
+@group(0) @binding(8) var<storage> bspTree: array<vec4u>;
+@group(0) @binding(9) var<storage> bspPlanes: array<f32>;
 
 const MAX_LEVEL = 20u;
 const BSP_LEAF = 3u;
@@ -107,6 +98,7 @@ fn intersect_trimesh(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> bool
 				let obj_idx = treeIds[node_id + j];
 				if (intersect_triangle(*r, hit, obj_idx)) {
 					r.tmax = hit.distance;
+					hit.triangle_idx = obj_idx;
 					found = true;
 				}
 			}
@@ -220,7 +212,7 @@ fn intersect_triangle(r: Ray, hit: ptr<function, HitInfo>, i: u32) -> bool {
 	let n = cross(e0, e1);
 
 	let q = dot(r.direction, n);
-	if (abs(q) < 0.0001) {
+	if (abs(q) < 1e-8) {
 		return false;
 	}
 
@@ -389,36 +381,16 @@ struct Onb {
 fn intersect_scene(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> bool {
 
 	if (!intersect_min_max(r)) {
-		// return false;
+		return false;
 	}
 
-	let x = treeIds[0u];
-	let y = bspTree[0u];
-	let z = bspPlanes[0u];
-
-	// const triangle_color = vec3f(0.9);
-	// let numTriangles = arrayLength(&meshFaces);
-	// for (var i = 0u; i < numTriangles; i++) {
-	// 	if (intersect_triangle(*r, hit, i)) {
-	// 		// let mat = materials[matIndices[i]];
-	// 		let mat = materials[0u];
-	// 		hit.diffuse = mat.diffuse;
-	// 		hit.emission = mat.emission;
-	// 		hit.specular = vec3f(0.0, 0.0, 0.0);
-	// 		hit.shader = uniforms.triangle_shader;
-	// 		r.tmax = hit.distance;
-	// 	}
-	// }
-
-
 	if (intersect_trimesh(r, hit)) {
-	// let mat = materials[meshFaces[hit.tri_idx].w];
-	let mat = materials[0u];
-	hit.diffuse = mat.diffuse;
-	hit.emission = mat.emission;
-	hit.specular = vec3f(0.0, 0.0, 0.0);
-	hit.shader = uniforms.triangle_shader;
-	r.tmax = hit.distance;
+		let mat = materials[meshFaces[hit.triangle_idx].w];
+		hit.diffuse = mat.diffuse;
+		hit.emission = mat.emission;
+		hit.specular = vec3f(0.0, 0.0, 0.0);
+		hit.shader = uniforms.triangle_shader;
+		r.tmax = hit.distance;
 	}
 
 	return hit.has_hit;

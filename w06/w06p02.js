@@ -92,10 +92,29 @@ async function main() {
 		code: wgslcode
 	});
 
-	// Load model
-	//TODO: Why can't I load bunny?
-	const obj_filename = 'data/bunny.obj';
-	const obj = await readOBJFile(obj_filename, 100, true); // file name, scale, ccw vertices
+	const models = {
+		'teapot': {
+			path: 'data/teapot.obj',
+			cameraConstant: 1.0,
+			eye: vec3(0.15, 1.5, 10.0),
+			look: vec3(0.15, 1.5, 0.0),
+			up: vec3(0.0, 1.0, 0.0),
+		},
+		'bunny': {
+			path: 'data/bunny.obj',
+			cameraConstant: 3.5,
+			eye: vec3(-0.02, 0.11, 0.6),
+			look: vec3(-0.02, 0.11, 0.0),
+			up: vec3(0.0, 1.0, 0.0),
+		},
+	}
+	const urlParams = new URLSearchParams(window.location.search);
+	const model = models[urlParams.get('model')] || models['teapot'];
+
+	document.getElementById('zoom-slider').value = model.cameraConstant
+	document.getElementById('zoom-slider-label').innerText = `Zoom: ${model.cameraConstant}`;
+
+	const obj = await readOBJFile(model.path, 1.0, true); // file name, scale, ccw vertices
 
 	const buffers = {};
 	build_bsp_tree(obj, device, buffers);
@@ -195,9 +214,10 @@ async function main() {
 		],
 	});
 
-	const eye = vec3(-0.02, 0.11, 0.6);
-	const look = vec3(-0.02, 0.11, 0.0);
-	const up = vec3(0.0, 1.0, 0.0);
+	// const eye = vec3(0.15, 1.5, 10.0);
+	// const look = vec3(0.15, 1.5, 0.0);
+	// const up = vec3(0.0, 1.0, 0.0);
+	const { eye, look, up } = model;
 
 	const v = normalize(subtract(look, eye));
 	const b1 = normalize(cross(v, up));
