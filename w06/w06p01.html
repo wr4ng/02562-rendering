@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>W06P01</title>
+	<script type="text/javascript" src="MV.js"></script>
+	<script type="text/javascript" src="OBJParser.js"></script>
+	<script type="text/javascript" src="Aabb.js"></script>
+	<script type="text/javascript" src="BspTree.js"></script>
+	<script type="text/javascript" src="TimingHelper.js"></script>
+	<script type="text/javascript" src="w06p01.js"></script>
+	<script id="wgsl" type="x-shader" src="w06p01.wgsl"></script>
+	<style>
+		body {
+			font-size: 1.4em;
+		}
+
+		.flex-row {
+			display: flex;
+			align-items: start;
+			margin-bottom: 0.5em;
+			gap: 16px;
+		}
+
+		.flex-col {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.controls {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="flex-row">
+		<canvas id="my-canvas" width="512" height="512">
+			Please use a browser that supports HTML5 canvas.
+		</canvas>
+		<div class="controls">
+			<div class="flex-col">
+				<button id="render-button">Render</button>
+			</div>
+			<div class="flex-col">
+				<label for="gamma-slider" id="gamma-slider-label">Gamma: 1.0</label>
+				<input type="range" id="gamma-slider" min="0.1" max="5.0" step="0.1" value="1.0">
+			</div>
+			<div class="flex-col">
+				<label for="zoom-slider" id="zoom-slider-label">Zoom: 1.4</label>
+				<input type="range" id="zoom-slider" min="0.5" max="5.0" step="0.1" value="1.4">
+			</div>
+			<div>
+				<label for="triangle-shader-select">Triangle Shader:</label><br>
+				<select id="triangle-shader-select">
+					<option value=0>Base color</option>
+					<option value=1 selected>Lambertian</option>
+				</select>
+			</div>
+			<div class="flex-col">
+				<label for="subpixel-slider" id="subpixel-slider-label">Subpixels: 1</label>
+				<input type="range" id="subpixel-slider" min="1" max="10" step="1" value="1">
+			</div>
+		</div>
+	</div>
+	<div>
+		<p>I see it going from ~84ms to ~64ms (1 subpixel)</p>
+	</div>
+</body>
+
+</html>
