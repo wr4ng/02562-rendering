@@ -299,23 +299,23 @@ fn lambertian(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<functio
 	let direct = select(vec3f(0.0), (hit.diffuse / 3.14) * light.L_i * max(dot(hit.normal, light.w_i), 0.0), V);
 	let emit = select(vec3f(0.0), hit.emission, hit.emit);
 
-	// Comment out indirect as stated
+	// Re-introduce indirect lighting
 	// Russian roulette indirect
-	// hit.throughput = hit.throughput * hit.diffuse;
-	// let Pd = (hit.throughput.r + hit.throughput.g + hit.throughput.b) / 3.0;
+	hit.throughput = hit.throughput * hit.diffuse;
+	let Pd = (hit.throughput.r + hit.throughput.g + hit.throughput.b) / 3.0;
 
-	// if (rnd(t) < Pd) {
-	// 	hit.throughput = hit.throughput / Pd;
+	if (rnd(t) < Pd) {
+		hit.throughput = hit.throughput / Pd;
 
-	// 	let w_i = sample_cosine_weighted_direction(hit.normal, t);
+		let w_i = sample_cosine_weighted_direction(hit.normal, t);
 
-	// 	r.origin = hit.position;
-	// 	r.direction = w_i;
-	// 	r.tmin = 0.001;
-	// 	r.tmax = 1.0e6;
-	// 	hit.emit = false;
-	// 	hit.has_hit = false;
-	// }
+		r.origin = hit.position;
+		r.direction = w_i;
+		r.tmin = 0.001;
+		r.tmax = 1.0e6;
+		hit.emit = false;
+		hit.has_hit = false;
+	}
 
 	return direct + emit;
 }
@@ -340,6 +340,9 @@ fn phong(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 }
 
 fn mirror(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
+	// Mirror has no directive light contribution, only reflection. Make sure reflected lights are emitted
+	hit.emit = true;
+
 	let reflected_dir = reflect(r.direction, hit.normal);
 	hit.has_hit = false;
 	r.origin = hit.position;
@@ -399,7 +402,10 @@ fn refraction(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 }
 
 // Refraction with Fresnel
-fn refract_fresnel(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<function, u32>) -> vec3f {
+fn transparent(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<function, u32>) -> vec3f {
+	// Transparent has no directive light contribution, only reflection. Make sure reflected lights are emitted
+	hit.emit = true;
+
 	var eta = hit.ior1_over_ior2;
 	var n = hit.normal;
 
@@ -461,7 +467,7 @@ fn shade(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<function, u3
 			return phong(r, hit) + refraction(r, hit);
 		}
 		case 6 {
-			return refract_fresnel(r, hit, t);
+			return transparent(r, hit, t);
 		}
 		case default {
 			return hit.diffuse + hit.emission;

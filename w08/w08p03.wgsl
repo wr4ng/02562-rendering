@@ -33,13 +33,14 @@ struct HitInfo {
 	shininess: f32,
 	shader: u32,
 	triangle_idx: u32,
-	// Add emit and throughput for path tracing
 	emit: bool,
 	throughput: vec3f,
+	// Extinction coefficient
+	extinction: vec3f,
 }
 
 fn default_hitinfo() -> HitInfo {
-	return HitInfo(false, 0.0, vec3f(0.0), vec3f(0.0), vec3f(0.0), vec3f(0.0), vec3f(0.0), 0.0, 0.0, 0u, 0u, true, vec3f(1.0));
+	return HitInfo(false, 0.0, vec3f(0.0), vec3f(0.0), vec3f(0.0), vec3f(0.0), vec3f(0.0), 0.0, 0.0, 0u, 0u, true, vec3f(1.0), vec3f(0.0));
 }
 
 struct Material {
@@ -58,7 +59,6 @@ var<uniform> uniforms: Uniforms;
 var<storage> vInfo: array<VertexInfo>;
 @group(0) @binding(3)
 var<storage> meshFaces: array<vec4u>;
-// Render texture for progressive rendering
 @group(0) @binding(4)
 var renderTexture: texture_2d<f32>;
 @group(0) @binding(5)
@@ -299,23 +299,22 @@ fn lambertian(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<functio
 	let direct = select(vec3f(0.0), (hit.diffuse / 3.14) * light.L_i * max(dot(hit.normal, light.w_i), 0.0), V);
 	let emit = select(vec3f(0.0), hit.emission, hit.emit);
 
-	// Comment out indirect as stated
 	// Russian roulette indirect
-	// hit.throughput = hit.throughput * hit.diffuse;
-	// let Pd = (hit.throughput.r + hit.throughput.g + hit.throughput.b) / 3.0;
+	hit.throughput = hit.throughput * hit.diffuse;
+	let Pd = (hit.throughput.r + hit.throughput.g + hit.throughput.b) / 3.0;
 
-	// if (rnd(t) < Pd) {
-	// 	hit.throughput = hit.throughput / Pd;
+	if (rnd(t) < Pd) {
+		hit.throughput = hit.throughput / Pd;
 
-	// 	let w_i = sample_cosine_weighted_direction(hit.normal, t);
+		let w_i = sample_cosine_weighted_direction(hit.normal, t);
 
-	// 	r.origin = hit.position;
-	// 	r.direction = w_i;
-	// 	r.tmin = 0.001;
-	// 	r.tmax = 1.0e6;
-	// 	hit.emit = false;
-	// 	hit.has_hit = false;
-	// }
+		r.origin = hit.position;
+		r.direction = w_i;
+		r.tmin = 0.001;
+		r.tmax = 1.0e6;
+		hit.emit = false;
+		hit.has_hit = false;
+	}
 
 	return direct + emit;
 }
@@ -340,6 +339,8 @@ fn phong(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 }
 
 fn mirror(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
+	hit.emit = true;
+
 	let reflected_dir = reflect(r.direction, hit.normal);
 	hit.has_hit = false;
 	r.origin = hit.position;
@@ -355,9 +356,6 @@ fn fresnel_R(costhetai: f32, costhetat: f32, ior_i_over_t: f32) -> f32 {
 	if (total_internal_reflection) {
 		return 1.0;
 	}
-	// r_per = (ηi cos θi - ηt cos θt) / (ηi cos θi + ηt cos θt)
-	// r_par = (ηi cos θt - ηt cos θi) / (ηi cos θt + ηt cos θi)
-	// R = 0.5 * (r_per^2 + r_par^2)
 	let r_per = (ior_i_over_t * costhetai - costhetat) / (ior_i_over_t * costhetai + costhetat);
 	let r_par = (ior_i_over_t * costhetat - costhetai) / (ior_i_over_t * costhetat + costhetai);
 	let R = 0.5 * (r_per * r_per + r_par * r_par);
@@ -398,19 +396,31 @@ fn refraction(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> vec3f {
 	return vec3f(0.0, 0.0, 0.0);
 }
 
-// Refraction with Fresnel
-fn refract_fresnel(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<function, u32>) -> vec3f {
+fn transparent(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<function, u32>) -> vec3f {
+	hit.emit = true;
+
 	var eta = hit.ior1_over_ior2;
 	var n = hit.normal;
 
 	var costhetai = dot(- r.direction, n);
 
+	// Hit from inside
 	if (costhetai < 0.0) {
 		eta = 1 / hit.ior1_over_ior2;
 		n = - hit.normal;
-	}
+		costhetai *= -1.0;
 
-	costhetai = dot(- r.direction, n);
+		let extinction_distance = hit.distance;
+		let T_r = exp(-hit.extinction * extinction_distance);
+		let prob = (T_r.r + T_r.g + T_r.b) / 3.0;
+
+		if (rnd(t) < prob) {
+			hit.throughput = hit.throughput * (T_r / prob);
+		}
+		else {
+			return vec3f(0.0, 0.0, 0.0);
+		}
+	}
 
 	let sin2thetai = 1.0 - costhetai * costhetai;
 	let sinthetat = eta * sqrt(sin2thetai);
@@ -422,7 +432,6 @@ fn refract_fresnel(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<fu
 
 	let costhetat = sqrt(cos2thetat);
 
-	// Compute Fresnel reflectance and decide reflection or refraction using Russian roulette
 	let R = fresnel_R(costhetai, costhetat, eta);
 
 	if (rnd(t) < R) {
@@ -461,7 +470,7 @@ fn shade(r: ptr<function, Ray>, hit: ptr<function, HitInfo>, t: ptr<function, u3
 			return phong(r, hit) + refraction(r, hit);
 		}
 		case 6 {
-			return refract_fresnel(r, hit, t);
+			return transparent(r, hit, t);
 		}
 		case default {
 			return hit.diffuse + hit.emission;
@@ -487,8 +496,9 @@ fn intersect_scene(r: ptr<function, Ray>, hit: ptr<function, HitInfo>) -> bool {
 	}
 	// Right Sphere
 	if (intersect_sphere(*r, hit, vec3f(130.0, 90.0, 250.0), 90.0)) {
-		hit.ior1_over_ior2 = 1 / 1.5; // Air to glass
-		hit.shader = 6u; // Fresnel
+		hit.ior1_over_ior2 = 1 / 1.5;
+		hit.shader = 6u;
+		hit.extinction = vec3f(0.01, 1.0, 0.0); // Green absorption
 		r.tmax = hit.distance;
 	}
 
