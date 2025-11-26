@@ -1,0 +1,5 @@
+img/luxo_pxr_campus.hdr filter=lfs diff=lfs merge=lfs -text
+img/luxo_pxr_campus.hdr.png filter=lfs diff=lfs merge=lfs -text
+img/park_music_stage_4k.RGBE.PNG filter=lfs diff=lfs merge=lfs -text
+hdr-convert/park_music_stage_4k.hdr filter=lfs diff=lfs merge=lfs -text
+hdr-convert/park_music_stage_4k.RGBE.PNG filter=lfs diff=lfs merge=lfs -text
