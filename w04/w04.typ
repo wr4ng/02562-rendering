@@ -80,13 +80,15 @@ $ I_2 = I_1 r_2^2/r_1^2 = 40 "lm/sr" (65 "cm")^2/(35 "cm")^2 = 137.96 "lm/sr" $
 
 
 = Part 6
+First we calculate radiosity based on the radiance:
 $ B = L pi = 5000 pi "W"/"m"^2 $
 
+We can then calculate the radiant flux using radiosity and the area of the emitter:
 $ Phi = B * A = 5000 pi "W"/"m"^2 dot (0.10 "m")^2 = 50 pi "W" $
 
 = Part 7
-
-$ B &= integral_(2 pi) L cos theta dif omega
+We determine the radiant exitance by performing an integral on radiance over the entire $2 pi$ solid angles: 
+$ M &= integral_(2 pi) L cos theta dif omega
 \ &= integral_(2 pi) 6000 cos theta "W/(m² sr)" cos theta dif omega
 \ &= 6000 "W/(m² sr)" integral_(2 pi) cos theta cos theta dif omega
 \ &= 6000 "W/(m² sr)" integral_0^(2 pi) integral_0^(pi/2) cos theta cos theta sin theta dif theta dif phi
@@ -96,7 +98,10 @@ $ B &= integral_(2 pi) L cos theta dif omega
 \ &= 6000 "W/(m² sr)" 2 pi integral_(1)^(0) -x^2 dif x
 \ &= 6000 "W/(m² sr)" 2 pi [-1/3 x^3]_1^0 
 \ &= 6000 "W/(m² sr)" 2 pi (0 - (-1/3)) 
-\ &= 6000 "W/(m² sr)" 2 pi 1/3 \ &= 4000 pi "W/(m²)" $
+\ &= 6000 "W/(m² sr)" 2 pi 1/3 \ &= 4000 pi "W/(m^2)" $
+
+This is the radiant exitance of the emitter. We can then determine the power based on the area:
+$ P = M dot A = 4000 pi "W/(m^2) dot (0.1 "m" dot 0.1 "m") = 4000 pi "W/(m²) dot 0.01 "m²" = 40 pi "W" $
 
 = Part 8 (optional)
 
