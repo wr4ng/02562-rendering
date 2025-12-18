@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>W10P04</title>
+</head>
+
+<body>
+	<p>
+		Blender:<br>
+		<strong>Pros:</strong>
+		<ul>
+			<li>Industry standard compared to a home-made rendering engine. Makes it easier to work with other people and transfer skills in in industry</li>
+			<li>A lot of resources available online in how to achieve a lot of different effects</li>
+		</ul>
+		<strong>Cons:</strong>
+		<ul>
+			<li>Not as flexible as a renderer engine. Even though Blender is Open-Source, it is not as easy to modify since there is so much more logic involved than just the renderer</li>
+		</ul>
+		WebGPU:<br>
+		<strong>Pros:</strong>
+		<ul>
+			<li>Very flexible. Any feature can be implemented (in theory). There are some browser limits that Blender does not have, however most techniques should be able to be implemented in WebGPU</li>
+			<li>More low-level control to rendering pipeline, allowing custom passes and similar non-trivial renderer features</li>
+		</ul>
+		<strong>Cons:</strong>
+		<ul>
+			<li>Need to implement every material "from scratch" (can reuse code)</li>
+			<li>May spend more time implementing renderer features than on the end product you're trying to produce</li>
+		</ul>
+
+		There is not really anything that comes to mind that I do not have access to in Cycles that WebGPU offers.
+		Maybe lower-level access to render passes could be useful in some context.
+		<br><br>
+		One thing that would be hard to implement in WebGPU would be Blender's shading system.
+		Blender's node system makes it very fast and easy to create new materials, can combine the results of shaders and nodes.
+		In WebGPU we need to write new shading code (possibly reusing code) when we want a new material. In Blender it is much faster to iterate on parameters and make complex materials from simple nodes. If one wanted to implement this in WebGPU, one should probably compile a nodegraph to WGSL which would not be trivial.
+	</p>
+</body>
+
+</html>
