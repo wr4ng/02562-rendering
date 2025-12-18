@@ -93,7 +93,7 @@
 			</div>
 			<div class="flex-col">
 				<label for="texture-scaling-slider" id="texture-scaling-slider-label">Texture Scaling: 1.0</label>
-				<input type="range" id="texture-scaling-slider" min="1" max="10" step="0.1" value="1.0">
+				<input type="range" id="texture-scaling-slider" min="0.1" max="10" step="0.1" value="1.0">
 			</div>
 			<div class="flex-col">
 				<label for="subpixel-slider" id="subpixel-slider-label">Subpixels: 5</label>
@@ -101,9 +101,16 @@
 			</div>
 		</div>
 	</div>
-	<p><b>TODO: <i>Inspect the default scene using different settings and describe how texture aliasing is affected by
-				pixel subdivision level and nearest versus linear filtering. The former is most easily explored using
-				the base colour shader. The latter is most easily explored using a magnified texture.</i></b></p>
+	<p>
+		Textures are smoothed out in the distance when increasing the number of subpixels.
+		This is due to multiple rays hitting hitting points corresponding to different pixels in the texture and thereby smoothing it out.
+		This is most apparent in the distance, when a small difference in ray direction leads to a big difference in the intersection point.
+		<br>
+		<br>
+		Texture interpolation shows a difference when the texels in the texture are larger than the fragments. (I.e. at Texture Scaling: 0.1)<br>
+		Using Nearest you can see individual pixel border close to the camera, when the texels are much larger than the individual fragments.<br>
+		Using Linear filtering the result is smoothed out, as fragment color is interpolated between the four surrounding texels in the texture. Thus for large texels the fragments linearly fade from edge to edge instead of having hard borders.
+	</p>
 </body>
 
 </html>
